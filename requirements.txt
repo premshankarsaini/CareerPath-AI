@@ -5,4 +5,4 @@ plotly
 joblib
 PyPDF2
 matplotlib
-sklearn
+scikit-learn
