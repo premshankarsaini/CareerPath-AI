@@ -4,8 +4,47 @@ import PyPDF2
 import matplotlib.pyplot as plt
 import pandas as pd
 
-# -------------------- PAGE CONFIG --------------------
-st.set_page_config(page_title="Career Predictor", layout="wide")
+
+
+
+
+# ===== UI STYLE =====
+st.set_page_config(page_title="CareerPath AI", page_icon="🚀", layout="wide")
+
+st.markdown("""
+<style>
+
+/* ===== BACKGROUND ===== */
+.stApp {
+    background: radial-gradient(circle at top, #0f172a, #020617);
+    color: #e0f2fe;
+}
+
+/* HEADINGS */
+h1, h2, h3 {
+    color: #38bdf8;
+    text-shadow: 0 0 10px #38bdf8, 0 0 20px #0ea5e9;
+}
+
+/* BUTTON */
+.stButton>button {
+    background: transparent;
+    color: #38bdf8;
+    border: 2px solid #38bdf8;
+    border-radius: 10px;
+    box-shadow: 0 0 10px #38bdf8;
+}
+
+/* SIDEBAR */
+section[data-testid="stSidebar"] {
+    background: #020617;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+
+
 
 # -------------------- SESSION STATE --------------------
 if "users" not in st.session_state:
@@ -18,11 +57,23 @@ if "username" not in st.session_state:
     st.session_state.username = ""
 
 # -------------------- SIDEBAR MENU --------------------
-menu = ["Login", "Signup"]
-choice = st.sidebar.selectbox("Menu", menu)
+if not st.session_state.logged_in:
+    menu = ["Login", "Signup"]
+    choice = st.sidebar.selectbox("Menu", menu)
+else:
+    choice = None
+
+
+
+st.sidebar.markdown("---")
+st.sidebar.info("CareerPath AI v1.0")
+
+
+
+
 
 # -------------------- SIGNUP --------------------
-if choice == "Signup":
+if not st.session_state.logged_in and choice == "Signup":
     st.subheader("Create Account")
 
     new_user = st.text_input("Username")
@@ -36,7 +87,7 @@ if choice == "Signup":
             st.success("Account created successfully!")
 
 # -------------------- LOGIN --------------------
-elif choice == "Login":
+elif not st.session_state.logged_in and choice == "Login":
 
     col1, col2 = st.columns(2)
 
@@ -51,6 +102,7 @@ elif choice == "Login":
                 st.session_state.logged_in = True
                 st.session_state.username = username
                 st.success(f"Welcome {username} 🎉")
+                st.rerun()
             else:
                 st.error("Invalid credentials")
 
@@ -63,7 +115,8 @@ if st.session_state.logged_in:
 
     if st.sidebar.button("Logout"):
         st.session_state.logged_in = False
-        st.session_state.username = ""
+        st.session_state.username = ""  
+        st.rerun()
 
 # -------------------- MAIN APP --------------------
 if st.session_state.logged_in:
@@ -77,25 +130,65 @@ if st.session_state.logged_in:
         "📄 Resume Analyzer"
     ])
 
-    # -------------------- CUSTOM CSS --------------------
-    st.markdown("""
-    <style>
-    .stApp {
-        background: linear-gradient(to right, #0f172a, #1e293b);
-        color: white;
-    }
-    h1, h2, h3 {
-        color: #38bdf8;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+
+
+
+    # ===== USER PROFILE =====
+    st.sidebar.markdown("## 👤 User Profile")
+
+    # Default user data 
+    if "user_name" not in st.session_state:
+        st.session_state.user_name = "Guest User"
+
+    if "user_email" not in st.session_state:
+        st.session_state.user_email = "guest@email.com"
+
+    # Input fields
+    name = st.sidebar.text_input("Name", st.session_state.user_name)
+    email = st.sidebar.text_input("Email", st.session_state.user_email)
+
+    # Save button
+    if st.sidebar.button("💾 Save Profile"):
+        st.session_state.user_name = name
+        st.session_state.user_email = email
+        st.sidebar.success("Profile Saved ✅")
+
+    st.sidebar.markdown("---")
+
+    # Show profile
+    st.sidebar.write(f"👤 {st.session_state.user_name}")
+    st.sidebar.write(f"📧 {st.session_state.user_email}")
+
+
+
+
+
 
     # -------------------- LOAD MODEL --------------------
-    model = joblib.load("model/career_model.pkl")
+    @st.cache_resource
+    def load_model():
+        return joblib.load("model/career_model.pkl")
+
+    model = load_model()
+
+
+
+
+    # ===== JOB ROLE DATA =====
+    job_roles = {
+        "Data Analyst": ["Python", "SQL", "Excel", "Power BI", "Statistics"],
+        "Software Engineer": ["Java/Python", "DSA", "OOPs", "Git", "Problem Solving"],
+        "Web Developer": ["HTML", "CSS", "JavaScript", "React", "Node.js"],
+        "ML Engineer": ["Python", "Machine Learning", "TensorFlow", "Data Handling"],
+        "Cyber Security": ["Networking", "Ethical Hacking", "Cryptography"]
+    }
+
+
+
 
     # ==================== DASHBOARD ====================
     if page == "🏠 Dashboard":
-        st.title("🎓 Career Dashboard")
+        st.markdown("<h1 style='text-align:center; color:#38bdf8; text-shadow:0 0 20px #38bdf8;'>🚀 CareerPath AI</h1>", unsafe_allow_html=True)
 
         col1, col2, col3 = st.columns(3)
 
@@ -108,10 +201,42 @@ if st.session_state.logged_in:
 
         st.write("Welcome to your AI Career System 🚀")
 
+
+
+
+        # ===== JOB ROLE FEATURE =====
+        st.subheader("🎯 Explore Career Roles")
+
+        selected_role = st.selectbox(
+
+            "Choose a Job Role",
+            list(job_roles.keys())
+        )
+
+        if selected_role:
+
+            st.subheader(f"Skills Required for {selected_role}")
+
+            for skill in job_roles[selected_role]:
+                st.write("✅", skill)
+
+
+
+
+
+        st.markdown("""
+        <h1 style='text-align: center;'>🚀 CareerPath AI</h1>
+        <p style='text-align: center;'>Your Smart Career Prediction & Guidance System</p>
+        """, unsafe_allow_html=True)
+
+
+
+
+
     # ==================== PREDICTION ====================
     elif page == "📊 Prediction":
 
-        st.title("CareerPath AI")
+        st.markdown("<h1 style='text-align:center; color:#38bdf8; text-shadow:0 0 20px #38bdf8;'>🚀 CareerPath AI</h1>", unsafe_allow_html=True)
 
         # Resume Upload
         st.subheader("📄 Upload Resume (Optional)")
@@ -251,9 +376,11 @@ if st.session_state.logged_in:
 
             st.pyplot(fig2)
 
+            
+
     # ==================== CHATBOT ====================
     elif page == "🤖 Chatbot":
-        st.title("🤖 AI Chatbot")
+        st.markdown("<h1 style='text-align:center; color:#38bdf8; text-shadow:0 0 20px #38bdf8;'>🚀 CareerPath AI</h1>", unsafe_allow_html=True)
 
         user_input = st.text_input("Ask something")
 
@@ -272,7 +399,7 @@ if st.session_state.logged_in:
 
     # ==================== RESUME ANALYZER ====================
     elif page == "📄 Resume Analyzer":
-        st.title("📄 Resume Analyzer")
+        st.markdown("<h1 style='text-align:center; color:#38bdf8; text-shadow:0 0 20px #38bdf8;'>🚀 CareerPath AI</h1>", unsafe_allow_html=True)
 
         uploaded_file = st.file_uploader("Upload Resume (PDF)", type=["pdf"])
 
